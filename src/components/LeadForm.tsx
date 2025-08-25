@@ -16,9 +16,10 @@ const formSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   phone: z.string().regex(phoneRegex, "Telefone deve estar no formato (99) 99999-9999"),
   email: z.string().email("E-mail inválido"),
-  company: z.string().min(2, "Nome da empresa é obrigatório"),
+  company: z.string().min(2, "Nome da locadora é obrigatório"),
   location: z.string().min(2, "Cidade/Estado é obrigatório"),
-  equipment: z.string().min(1, "Selecione um equipamento"),
+  monthlyRevenue: z.string().min(1, "Selecione o faturamento mensal"),
+  mainChallenge: z.string().min(1, "Selecione o principal desafio"),
   lgpdConsent: z.boolean().refine((val) => val === true, {
     message: "É necessário aceitar os termos LGPD",
   }),
@@ -26,11 +27,20 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-const equipmentOptions = [
-  "Andaime",
-  "Escora Metálica",
-  "Betoneira",
-  "Compactador",
+const revenueOptions = [
+  "Até R$ 10.000",
+  "R$ 10.001 a R$ 30.000", 
+  "R$ 30.001 a R$ 50.000",
+  "R$ 50.001 a R$ 100.000",
+  "Acima de R$ 100.000"
+];
+
+const challengeOptions = [
+  "Poucos leads qualificados",
+  "Baixa presença no Google",
+  "Concorrência muito forte",
+  "Dificuldade para precificar",
+  "Gestão das campanhas",
   "Outros"
 ];
 
@@ -75,12 +85,12 @@ export const LeadForm = () => {
       // Simular webhook para CRM
       await new Promise((resolve) => setTimeout(resolve, 1500));
       
-      console.log("Dados enviados para CRM:", data);
+      console.log("Lead capturado - ODuo Assessoria:", data);
       
       toast({
-        title: "Obrigado!",
-        description: "Em breve nossa equipe entrará em contato pelo WhatsApp.",
-        duration: 5000,
+        title: "Obrigado pelo seu interesse!",
+        description: "Em breve nossa equipe entrará em contato pelo WhatsApp para agendar uma conversa estratégica.",
+        duration: 6000,
       });
       
       reset();
@@ -96,13 +106,18 @@ export const LeadForm = () => {
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto shadow-card border-0 bg-card/80 backdrop-blur-sm">
+    <Card className="w-full max-w-2xl mx-auto shadow-card border-0 bg-card/95 backdrop-blur-sm">
       <CardHeader className="text-center pb-8">
-        <CardTitle className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-          Solicite sua Proposta
+        <div className="mb-4">
+          <span className="bg-accent text-accent-foreground px-4 py-2 rounded-full text-sm font-medium">
+            🔥 BÔNUS EXCLUSIVO: R$ 1.000 OFF + Raio X Gratuito
+          </span>
+        </div>
+        <CardTitle className="text-3xl font-bold text-foreground mb-2">
+          Acelere sua Locadora com o Método ODuo
         </CardTitle>
         <p className="text-muted-foreground text-lg">
-          Preencha os dados e receba uma cotação personalizada
+          Aumente em até 3x seus clientes com estratégias de marketing comprovadas
         </p>
       </CardHeader>
       
@@ -161,12 +176,12 @@ export const LeadForm = () => {
 
             <div className="space-y-2">
               <Label htmlFor="company" className="text-sm font-medium">
-                Empresa *
+                Nome da Locadora *
               </Label>
               <Input
                 id="company"
                 {...register("company")}
-                placeholder="Nome da sua empresa"
+                placeholder="Nome da sua locadora"
                 className="h-12"
               />
               {errors.company && (
@@ -183,7 +198,7 @@ export const LeadForm = () => {
               <Input
                 id="location"
                 {...register("location")}
-                placeholder="Cidade, Estado"
+                placeholder="Ex: São Paulo, SP"
                 className="h-12"
               />
               {errors.location && (
@@ -192,25 +207,46 @@ export const LeadForm = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="equipment" className="text-sm font-medium">
-                Equipamento de Interesse *
+              <Label htmlFor="monthlyRevenue" className="text-sm font-medium">
+                Faturamento Mensal da Locadora *
               </Label>
-              <Select onValueChange={(value) => setValue("equipment", value)}>
+              <Select onValueChange={(value) => setValue("monthlyRevenue", value)}>
                 <SelectTrigger className="h-12">
-                  <SelectValue placeholder="Selecione o equipamento" />
+                  <SelectValue placeholder="Selecione o faturamento" />
                 </SelectTrigger>
                 <SelectContent>
-                  {equipmentOptions.map((option) => (
+                  {revenueOptions.map((option) => (
                     <SelectItem key={option} value={option}>
                       {option}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {errors.equipment && (
-                <p className="text-destructive text-sm">{errors.equipment.message}</p>
+              {errors.monthlyRevenue && (
+                <p className="text-destructive text-sm">{errors.monthlyRevenue.message}</p>
               )}
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="mainChallenge" className="text-sm font-medium">
+              Principal Desafio da Locadora *
+            </Label>
+            <Select onValueChange={(value) => setValue("mainChallenge", value)}>
+              <SelectTrigger className="h-12">
+                <SelectValue placeholder="Qual o maior desafio hoje?" />
+              </SelectTrigger>
+              <SelectContent>
+                {challengeOptions.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.mainChallenge && (
+              <p className="text-destructive text-sm">{errors.mainChallenge.message}</p>
+            )}
           </div>
 
           <div className="space-y-4">
@@ -223,12 +259,21 @@ export const LeadForm = () => {
                 htmlFor="lgpdConsent"
                 className="text-sm leading-relaxed cursor-pointer"
               >
-                Autorizo o uso dos meus dados para contato comercial. *
+                Autorizo o uso dos meus dados para contato comercial e envio de materiais educativos sobre marketing para locadoras. *
               </Label>
             </div>
             {errors.lgpdConsent && (
               <p className="text-destructive text-sm">{errors.lgpdConsent.message}</p>
             )}
+          </div>
+
+          <div className="bg-accent/10 border border-accent/20 rounded-lg p-4 text-center">
+            <p className="text-sm text-accent font-medium mb-2">
+              ⭐ BÔNUS ao fechar hoje: Raio X de Conversões (valor R$ 800) + R$ 1.000 OFF
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Válido apenas até 31/08 ou enquanto durarem as 7 vagas restantes
+            </p>
           </div>
 
           <Button
@@ -238,8 +283,12 @@ export const LeadForm = () => {
             disabled={isSubmitting}
             className="w-full h-14 text-lg font-semibold"
           >
-            {isSubmitting ? "Enviando..." : "Quero receber uma proposta agora"}
+            {isSubmitting ? "Enviando..." : "🚀 Quero Acelerar Minha Locadora Agora"}
           </Button>
+
+          <p className="text-xs text-center text-muted-foreground">
+            Ao enviar, você concorda em receber contato da ODuo Assessoria para apresentação da solução.
+          </p>
         </form>
       </CardContent>
     </Card>
